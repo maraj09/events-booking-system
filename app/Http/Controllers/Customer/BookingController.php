@@ -8,6 +8,7 @@ use App\Models\Booking;
 use App\Models\Event;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 
 class BookingController extends Controller
@@ -37,23 +38,29 @@ class BookingController extends Controller
             'quantity' => 'required|integer|min:1',
         ]);
 
-        $event = Event::find($request->event_id);
+        $userId = Auth::id();
 
-        $totalBookedSeats = Booking::where('event_id', $event->id)->sum('quantity');
-        $availableSeats = $event->seats - $totalBookedSeats;
+        return DB::transaction(function () use ($request, $userId) {
+            $event = Event::findOrFail($request->event_id);
 
-        if ($request->quantity > $availableSeats) {
-            return response()->json(['message' => 'Not enough seats available.'], 400);
-        }
+            // Lock the row for this event to prevent race conditions
+            $totalBookedSeats = Booking::where('event_id', $event->id)
+                ->lockForUpdate() 
+                ->sum('quantity');
+            $availableSeats = $event->seats - $totalBookedSeats;
 
-        $booking = Booking::create([
-            'user_id' => Auth::id(),
-            'event_id' => $request->event_id,
-            'quantity' => $request->quantity,
-        ]);
+            if ($request->quantity > $availableSeats) {
+                return response()->json(['message' => 'Not enough seats available.'], 400);
+            }
+            $booking = Booking::create([
+                'user_id' => $userId,
+                'event_id' => $request->event_id,
+                'quantity' => $request->quantity,
+            ]);
 
-        Mail::to(Auth::user()->email)->send(new BookingConfirmationMail($booking, $event));
+            Mail::to(Auth::user()->email)->send(new BookingConfirmationMail($booking, $event));
 
-        return response()->json(['message' => 'Booking created successfully', 'booking' => $booking], 201);
+            return response()->json(['message' => 'Booking created successfully', 'booking' => $booking], 201);
+        });
     }
 }
