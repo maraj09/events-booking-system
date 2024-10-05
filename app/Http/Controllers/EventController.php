@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Booking;
 use App\Models\Event;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -12,6 +13,11 @@ class EventController extends Controller
     public function index(Request $request)
     {
         $events = Event::all();
+
+        foreach ($events as $event) {
+            $bookingsCount = Booking::where('event_id', $event->id)->sum('quantity');
+            $event->remaining_seats = $event->seats - $bookingsCount;
+        }
 
         return response()->json($events);
     }

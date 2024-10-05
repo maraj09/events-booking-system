@@ -22,4 +22,9 @@ class Event extends Model
         'start_date' => 'datetime',
         'price' => 'float',
     ];
+
+    public function bookings()
+    {
+        return $this->hasMany(Booking::class);
+    }
 }
