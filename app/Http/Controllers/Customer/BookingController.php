@@ -3,10 +3,12 @@
 namespace App\Http\Controllers\Customer;
 
 use App\Http\Controllers\Controller;
+use App\Mail\BookingConfirmationMail;
 use App\Models\Booking;
 use App\Models\Event;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
 
 class BookingController extends Controller
 {
@@ -44,12 +46,13 @@ class BookingController extends Controller
             return response()->json(['message' => 'Not enough seats available.'], 400);
         }
 
-
         $booking = Booking::create([
             'user_id' => Auth::id(),
             'event_id' => $request->event_id,
             'quantity' => $request->quantity,
         ]);
+
+        Mail::to(Auth::user()->email)->send(new BookingConfirmationMail($booking, $event));
 
         return response()->json(['message' => 'Booking created successfully', 'booking' => $booking], 201);
     }
