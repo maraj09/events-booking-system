@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Booking;
 use App\Models\Event;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
@@ -68,6 +69,11 @@ class EventController extends Controller
 
     public function update(Request $request, $id)
     {
+        Log::info('Incoming request data:', [
+            'id' => $id,
+            'request_data' => $request->all(),
+        ]);
+
         $event = Event::find($id);
 
         if (!$event) {

@@ -19,7 +19,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
 Route::middleware(['auth:sanctum', RoleMiddleware::class . ':admin'])->group(function () {
     Route::post('/events', [EventController::class, 'store']);
     Route::get('/events/{id}/edit', [EventController::class, 'edit']);
-    Route::post('/events/{id}/update', [EventController::class, 'update']);
+    Route::put('/events/{id}', [EventController::class, 'update']);
     Route::delete('/events/{id}', [EventController::class, 'destroy']);
 });
 

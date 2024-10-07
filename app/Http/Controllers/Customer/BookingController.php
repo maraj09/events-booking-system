@@ -15,15 +15,18 @@ class BookingController extends Controller
 {
     public function index(Request $request)
     {
-
         $userId = $request->user()->id;
 
-        $events = Event::with(['bookings' => function ($query) use ($userId) {
+        // Fetch only events booked by the user
+        $events = Event::whereHas('bookings', function ($query) use ($userId) {
             $query->where('user_id', $userId);
-        }])
+        })
+            ->with(['bookings' => function ($query) use ($userId) {
+                $query->where('user_id', $userId);
+            }])
             ->get()
             ->map(function ($event) use ($userId) {
-                $totalQuantity = $event->bookings->where('user_id', $userId)->sum('quantity');
+                $totalQuantity = $event->bookings->sum('quantity');
                 $event->total_booked_quantity = $totalQuantity;
                 return $event;
             });
@@ -45,7 +48,7 @@ class BookingController extends Controller
 
             // Lock the row for this event to prevent race conditions
             $totalBookedSeats = Booking::where('event_id', $event->id)
-                ->lockForUpdate() 
+                ->lockForUpdate()
                 ->sum('quantity');
             $availableSeats = $event->seats - $totalBookedSeats;
 

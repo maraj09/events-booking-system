@@ -27,7 +27,7 @@ php artisan key:generate
 4. Setup Database Connections and Mails Ports in .env file
 
 ```bash
-# Set this in .env must for sending mail
+# Set this in .env (must for sending mail)
 QUEUE_CONNECTION=database
 ```
 
@@ -42,5 +42,10 @@ php artisan migrate --seed
 ```bash
 php artisan serve
 
+# Run (must for sending mail)
 php artisan queue:listen
+
+php artisan storage:link
 ```
+Now logged in as Admin (email: admin@gmail.com & password: 123456789)
+For customer register a account. 
